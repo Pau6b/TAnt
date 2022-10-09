@@ -2,10 +2,13 @@ mod app;
 mod backend;
 mod frontend;
 
-use crate::app::run;
+use crate::app::{Application};
 use std::io;
+use std::env;
 
 fn main() -> Result<(), io::Error> {
+    env::set_var("RUST_BACKTRACE", "full");
     // setup terminal
-    run()
+    let mut app = Application::new()?;
+    app.run()
 }

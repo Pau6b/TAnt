@@ -1,25 +1,4 @@
-use crate::backend::{Task, TaskManager};
-use tui::widgets::{ListState, List};
-
-pub struct UIState {
-    pub task_list: StatefulList<Task>,
-}
-
-impl UIState {
-    pub fn new(task_manager: &TaskManager) -> UIState {
-        UIState {
-            task_list: StatefulList::with_items(task_manager.get_tasks().to_vec()),
-        }
-    }
-
-    pub fn on_up(&mut self) {
-        self.task_list.previous();
-    }
-
-    pub fn on_down(&mut self) {
-        self.task_list.next();
-    }
-}
+use tui::widgets::{ListState};
 
 pub struct StatefulList<T> {
     pub state: ListState,
@@ -27,6 +6,13 @@ pub struct StatefulList<T> {
 }
 
 impl<T> StatefulList<T> {
+    pub fn new() -> StatefulList<T> {
+        StatefulList {
+            state : ListState::default(),
+            items : Vec::<T>::new(),
+        }
+    }
+
     pub fn with_items(items: Vec<T>) -> StatefulList<T> {
         let mut state = ListState::default();
         state.select(Some(0));
