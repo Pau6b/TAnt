@@ -1,10 +1,10 @@
-use std::{rc::Rc, cell::RefCell};
+use std::{cell::RefCell, rc::Rc};
 
-use crate::app::{ApplicationBackend};
-use crate::backend::{Task, TaskManager, task};
+use crate::app::{ApplicationBackend, execute_menu};
+use crate::backend::Task;
 use crate::frontend::core::StatefulList;
-use crate::frontend::menus::{Menu};
-use crossterm::event::{KeyEvent, KeyCode};
+use crate::frontend::core::{Logic, Menu, MenuEvent, UIContext};
+use crossterm::event::{KeyCode, KeyEvent};
 
 use tui::{
     layout::{Constraint, Direction, Layout},
@@ -15,23 +15,32 @@ use tui::{
 };
 
 pub struct MainMenu {
-    task_manager: Rc<RefCell<TaskManager>>,
+    logic: Rc<RefCell<Logic>>,
+    ui_context: Option<Rc<RefCell<UIContext>>>,
     task_list: StatefulList<Task>,
 }
 
 impl MainMenu {
-    pub fn new(task_manager: Rc<RefCell<TaskManager>>) -> MainMenu {
-        let tasks = task_manager.borrow().get_tasks().to_vec();
+    pub fn new(logic: Rc<RefCell<Logic>>) -> MainMenu {
+        let tasks = {
+            let task_manager = &logic.borrow().task_manager;
+            task_manager.get_tasks().to_vec()
+        };
         MainMenu {
-            task_manager,
-            task_list : StatefulList::with_items(tasks),
+            logic,
+            ui_context: None,
+            task_list: StatefulList::with_items(tasks),
         }
     }
 }
 
 impl Menu for MainMenu {
+    fn initialize(&mut self, ui_context: Rc<RefCell<UIContext>>) {
+        self.ui_context = Some(Rc::clone(&ui_context));
+    }
+
     fn render(&mut self, frame: &mut Frame<ApplicationBackend>) {
-        let task_manager = self.task_manager.borrow_mut();
+        let task_manager = &mut self.logic.borrow_mut().task_manager;
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(1)
@@ -49,17 +58,22 @@ impl Menu for MainMenu {
         frame.render_stateful_widget(tasks, chunks[0], &mut self.task_list.state);
     }
 
-    fn on_key_pressed(&mut self, key: KeyEvent) {
+    fn on_key_pressed(&mut self, key: KeyEvent) -> Option<MenuEvent> {
         match key.code {
             KeyCode::Up => self.task_list.previous(),
             KeyCode::Down => self.task_list.next(),
-            KeyCode::Char(_c) => {
-                //if 'n' == c {
-                //    let new_menu = Box::new(MainMenu::new());
-                //    self.execute_menu_fn.unwrap()(new_menu).unwrap();
-                //}
-            } 
+            KeyCode::Char(c) => {
+                if 'n' == c {
+                    let mut new_menu: Box<dyn Menu> = Box::new(MainMenu::new(Rc::clone(&self.logic)));
+                    execute_menu(&mut new_menu, Rc::clone(self.ui_context.as_ref().unwrap()));
+                    
+                }
+                else if 'q' == c {
+                    return Some(MenuEvent::Quit);
+                }
+            }
             _ => (),
         }
+        None
     }
 }
