@@ -111,6 +111,9 @@ pub fn execute_menu(
                 if let Some(r) = result {
                     match r {
                         MenuEvent::Quit => break,
+                        MenuEvent::MenuExecutionResult(r) => {
+                            r?
+                        },
                     }
                 }
             }

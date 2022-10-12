@@ -65,8 +65,7 @@ impl Menu for MainMenu {
             KeyCode::Char(c) => {
                 if 'n' == c {
                     let mut new_menu: Box<dyn Menu> = Box::new(MainMenu::new(Rc::clone(&self.logic)));
-                    execute_menu(&mut new_menu, Rc::clone(self.ui_context.as_ref().unwrap()));
-                    
+                    return Some(MenuEvent::MenuExecutionResult(execute_menu(&mut new_menu, Rc::clone(self.ui_context.as_ref().unwrap()))));
                 }
                 else if 'q' == c {
                     return Some(MenuEvent::Quit);
