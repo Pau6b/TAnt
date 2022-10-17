@@ -48,25 +48,30 @@ impl Application {
             blogic.task_manager.add_task(Task {
                 title: "Task 1".to_string(),
                 state: "In process".to_string(),
+                description: "Description 1".to_string(),
             });
             blogic.task_manager.add_task(Task {
                 title: "Task 2".to_string(),
                 state: "Backlog".to_string(),
+                description: "Description 2".to_string(),
             });
 
             blogic.task_manager.add_task(Task {
                 title: "Task 3".to_string(),
                 state: "Done".to_string(),
+                description: "Description 3".to_string(),
             });
 
             blogic.task_manager.add_task(Task {
                 title: "Task 4".to_string(),
                 state: "Done".to_string(),
+                description: "Description 4".to_string(),
             });
 
             blogic.task_manager.add_task(Task {
                 title: "Task 5".to_string(),
                 state: "InProcess".to_string(),
+                description: "Description 5".to_string(),
             });
         }
 
@@ -119,6 +124,7 @@ pub fn execute_menu(
             }
         }
         if last_tick.elapsed() >= tick_rate {
+            menu.update(last_tick.elapsed());
             //update the app here if needed
             last_tick = Instant::now();
         }

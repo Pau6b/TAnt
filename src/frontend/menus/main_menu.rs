@@ -1,9 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::app::{ApplicationBackend, execute_menu};
+use crate::app::{execute_menu, ApplicationBackend};
 use crate::backend::Task;
-use crate::frontend::core::StatefulList;
-use crate::frontend::core::{Logic, Menu, MenuEvent, UIContext};
+use crate::frontend::{
+    core::{Logic, Menu, MenuEvent, StatefulList, UIContext},
+    menus::CreateTaskMenu,
+};
 use crossterm::event::{KeyCode, KeyEvent};
 
 use tui::{
@@ -27,7 +29,7 @@ impl MainMenu {
             task_manager.get_tasks().to_vec()
         };
         MainMenu {
-            logic,
+            logic: Rc::clone(&logic),
             ui_context: None,
             task_list: StatefulList::with_items(tasks),
         }
@@ -52,7 +54,7 @@ impl Menu for MainMenu {
             .map(|i| ListItem::new(vec![Spans::from(Span::raw(i.title.clone()))]))
             .collect();
         let tasks = List::new(tasks)
-            .block(Block::default().borders(Borders::ALL).title("List"))
+            .block(Block::default().borders(Borders::ALL).title("Task List"))
             .highlight_style(Style::default().add_modifier(Modifier::BOLD))
             .highlight_symbol("> ");
         frame.render_stateful_widget(tasks, chunks[0], &mut self.task_list.state);
@@ -64,15 +66,24 @@ impl Menu for MainMenu {
             KeyCode::Down => self.task_list.next(),
             KeyCode::Char(c) => {
                 if 'n' == c {
-                    let mut new_menu: Box<dyn Menu> = Box::new(MainMenu::new(Rc::clone(&self.logic)));
-                    return Some(MenuEvent::MenuExecutionResult(execute_menu(&mut new_menu, Rc::clone(self.ui_context.as_ref().unwrap()))));
-                }
-                else if 'q' == c {
-                    return Some(MenuEvent::Quit);
+                    let mut new_menu: Box<dyn Menu> =
+                        Box::new(CreateTaskMenu::new(Rc::clone(&self.logic)));
+                    let execution_result = Some(MenuEvent::MenuExecutionResult(execute_menu(
+                        &mut new_menu,
+                        Rc::clone(self.ui_context.as_ref().unwrap()),
+                    )));
+                    let logic = self.logic.borrow_mut();
+                    if self.task_list.items.len() != logic.task_manager.get_tasks().len() {
+                        self.task_list.items.push(logic.task_manager.get_tasks().last().unwrap().clone());
+                    }
+                    return execution_result;
                 }
             }
+            KeyCode::Esc => return Some(MenuEvent::Quit),
             _ => (),
         }
         None
     }
+
+    fn update(&mut self, _elapsed_time: std::time::Duration) {}
 }
