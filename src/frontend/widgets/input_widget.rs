@@ -25,15 +25,25 @@ pub struct InputWidget {
     text: String,
     focus_state: InputWidgetFocusState,
     cursor_state: Option<CursorState>,
+    allow_new_lines: bool,
 }
 
 impl InputWidget {
-    pub fn new() -> InputWidget {
+    fn new(allow_new_lines: bool) -> InputWidget {
         InputWidget {
             text: String::new(),
             focus_state: InputWidgetFocusState::NotFocused,
             cursor_state: None,
+            allow_new_lines,
         }
+    }
+
+    pub fn create_text_area() -> InputWidget {
+        Self::new(true)
+    }
+
+    pub fn create_text_label() -> InputWidget {
+        Self::new(false)
     }
 
     pub fn get_current_text(&self) -> String {
@@ -69,6 +79,11 @@ impl InputWidget {
             KeyCode::Backspace => {
                 self.text.pop();
                 modified_text = true;
+            }
+            KeyCode::Enter => {
+                if self.allow_new_lines {
+                    self.text.push('\n');
+                }
             }
             _ => (),
         };

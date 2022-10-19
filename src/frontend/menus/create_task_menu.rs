@@ -1,8 +1,8 @@
 use crate::app::ApplicationBackend;
 use crate::backend::Task;
 use crate::frontend::core::{Logic, Menu, MenuEvent, UIContext};
-use crate::frontend::widgets::input_widget::InputWidgetFocusState;
-use crate::frontend::widgets::InputWidget;
+use crate::frontend::widgets::bottom_bar::BottomBarAction;
+use crate::frontend::widgets::{InputWidget, InputWidgetFocusState, BottomBar};
 use crossterm::event::{KeyCode, KeyEvent};
 use std::{cell::RefCell, rc::Rc};
 use tui::{
@@ -17,15 +17,21 @@ pub struct CreateTaskMenu {
     ui_context: Option<Rc<RefCell<UIContext>>>,
     inputs: [InputWidget; 3],
     selected_input: u8,
+    bottom_bar: BottomBar,
 }
 
 impl CreateTaskMenu {
     pub fn new(logic: Rc<RefCell<Logic>>) -> CreateTaskMenu {
+        let mut bottom_bar = BottomBar::new();
+        bottom_bar.add_action(KeyCode::Enter, BottomBarAction::Submit);
+        bottom_bar.add_action(KeyCode::Esc, BottomBarAction::Exit);
+
         CreateTaskMenu {
             logic: Rc::clone(&logic),
             ui_context: None,
-            inputs: [InputWidget::new(), InputWidget::new(), InputWidget::new()],
+            inputs: [InputWidget::create_text_label(), InputWidget::create_text_label(), InputWidget::create_text_area()],
             selected_input: 0,
+            bottom_bar,
         }
     }
 }
@@ -38,11 +44,12 @@ impl Menu for CreateTaskMenu {
 
     fn render(&mut self, frame: &mut Frame<ApplicationBackend>) {
         //let task_manager = &mut self.logic.borrow_mut().task_manager;
+        let area = self.bottom_bar.render(frame, frame.size());
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .margin(1)
-            .constraints([Constraint::Length(5), Constraint::Percentage(13), Constraint::Percentage(72), Constraint::Percentage(10)].as_ref())
-            .split(frame.size());
+            .margin(0)
+            .constraints([Constraint::Length(3), Constraint::Length(3), Constraint::Percentage(72), Constraint::Percentage(10)].as_ref())
+            .split(area);
         render_input_widget_with_title(frame, &self.inputs[0], String::from("Title: "), chunks[0], 13);
         render_input_widget_with_title(frame, &self.inputs[1], String::from("State: "), chunks[1], 13);
         render_input_widget_with_title(frame, &self.inputs[2], String::from("Description: "), chunks[2], 13);
@@ -113,7 +120,7 @@ fn render_input_widget_with_title(frame: &mut Frame<ApplicationBackend>, input_w
         .style(Style::default().fg(Color::White).bg(Color::Black));
     let line = Layout::default()
         .direction(Direction::Horizontal)
-        .margin(1)
+        .margin(0)
         .constraints(
             [
                 Constraint::Length(max_title_width),

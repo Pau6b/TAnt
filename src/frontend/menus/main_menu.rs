@@ -2,6 +2,8 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::app::{execute_menu, ApplicationBackend};
 use crate::backend::Task;
+use crate::frontend::widgets::BottomBar;
+use crate::frontend::widgets::bottom_bar::BottomBarAction;
 use crate::frontend::{
     core::{Logic, Menu, MenuEvent, StatefulList, UIContext},
     menus::CreateTaskMenu,
@@ -20,6 +22,7 @@ pub struct MainMenu {
     logic: Rc<RefCell<Logic>>,
     ui_context: Option<Rc<RefCell<UIContext>>>,
     task_list: StatefulList<Task>,
+    bottom_bar: BottomBar,
 }
 
 impl MainMenu {
@@ -28,10 +31,15 @@ impl MainMenu {
             let task_manager = &logic.borrow().task_manager;
             task_manager.get_tasks().to_vec()
         };
+        let mut bottom_bar = BottomBar::new();
+        bottom_bar.add_action(KeyCode::Char('n'), BottomBarAction::CreateTask);
+        bottom_bar.add_action(KeyCode::Esc, BottomBarAction::Exit);
+
         MainMenu {
             logic: Rc::clone(&logic),
             ui_context: None,
             task_list: StatefulList::with_items(tasks),
+            bottom_bar,
         }
     }
 }
@@ -43,11 +51,12 @@ impl Menu for MainMenu {
 
     fn render(&mut self, frame: &mut Frame<ApplicationBackend>) {
         let task_manager = &mut self.logic.borrow_mut().task_manager;
+        let area = self.bottom_bar.render(frame, frame.size());
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(1)
             .constraints([Constraint::Percentage(50)].as_ref())
-            .split(frame.size());
+            .split(area);
         let tasks: Vec<ListItem> = task_manager
             .get_tasks()
             .iter()
