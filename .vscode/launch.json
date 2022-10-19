@@ -15,5 +15,13 @@
             "environment": [],
             "externalConsole": true
         },
+        {
+            "name": "(OSX) Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/tant",
+            "args": [],
+            "cwd": "${workspaceRoot}",
+        }
     ]
 }
