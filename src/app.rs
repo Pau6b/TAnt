@@ -13,7 +13,6 @@ use std::{
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::{
-    backend::{Task, TaskManager},
     frontend::{
         core::{Logic, Menu, MenuEvent, UIContext},
         menus::MainMenu,
@@ -29,13 +28,12 @@ pub struct Application {
 impl Application {
     pub fn new() -> Result<Application, io::Error> {
         Ok(Application {
-            logic: Rc::new(RefCell::new(Logic {
-                task_manager: TaskManager::new(),
-            })),
+            logic: Rc::new(RefCell::new(Logic::new())),
         })
     }
 
     pub fn run(&mut self) -> Result<(), io::Error> {
+
         enable_raw_mode()?;
         let mut stdout = io::stdout();
         execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -43,44 +41,11 @@ impl Application {
         let terminal = Terminal::new(backend)?;
         let ui_context = Rc::new(RefCell::new(UIContext { terminal }));
 
-        {
-            let mut blogic = self.logic.borrow_mut();
-            blogic.task_manager.add_task(Task {
-                title: "Task 1".to_string(),
-                state: "In process".to_string(),
-                description: "Description 1".to_string(),
-            });
-            blogic.task_manager.add_task(Task {
-                title: "Task 2".to_string(),
-                state: "Backlog".to_string(),
-                description: "Description 2".to_string(),
-            });
-
-            blogic.task_manager.add_task(Task {
-                title: "Task 3".to_string(),
-                state: "Done".to_string(),
-                description: "Description 3".to_string(),
-            });
-
-            blogic.task_manager.add_task(Task {
-                title: "Task 4".to_string(),
-                state: "Done".to_string(),
-                description: "Description 4".to_string(),
-            });
-
-            blogic.task_manager.add_task(Task {
-                title: "Task 5".to_string(),
-                state: "InProcess".to_string(),
-                description: "Description 5".to_string(),
-            });
-        }
-
         let mut main_menu: Box<dyn Menu> = Box::new(MainMenu::new(Rc::clone(&self.logic)));
         execute_menu(&mut main_menu, Rc::clone(&ui_context))?;
 
         let mut bui_context = ui_context.borrow_mut();
 
-        //thread::sleep(Duration::from_millis(5000));
         // restore terminal
         disable_raw_mode()?;
         execute!(

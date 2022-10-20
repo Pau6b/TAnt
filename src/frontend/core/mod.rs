@@ -14,3 +14,14 @@ pub struct Logic {
 pub struct UIContext {
     pub terminal: Terminal<ApplicationBackend>,
 }
+
+impl Logic {
+    pub fn new() -> Logic {
+        let mut task_manager = TaskManager::new();
+        task_manager.initialize();
+        
+        Logic {
+            task_manager,
+        }
+    }
+}
