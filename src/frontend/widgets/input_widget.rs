@@ -102,6 +102,7 @@ impl FocusableWidget for InputWidget {
             KeyCode::Enter => {
                 if self.allow_new_lines {
                     self.text.push('\n');
+                    modified_text = true;
                 }
             }
             _ => (),

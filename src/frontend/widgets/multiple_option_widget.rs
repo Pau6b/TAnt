@@ -61,6 +61,9 @@ impl Widget for MultipleOptionWidget {
             let mut style = Style::default().fg(Color::White).bg(Color::Black);
             if let Some(selected_input) = self.selected_option.clone() {
                 if selected_input == elem as u32 {
+                    if self.focus_state == FocusState::Focused {
+                        style = style.add_modifier(Modifier::ITALIC);
+                    }
                     style = style.add_modifier(Modifier::UNDERLINED);
                 }
             }
@@ -108,5 +111,7 @@ impl FocusableWidget for MultipleOptionWidget {
         }
     }
 
-    fn update(&mut self, _duration: Duration) {}
+    fn update(&mut self, _duration: Duration) {
+
+    }
 }

@@ -35,7 +35,7 @@ impl CreateTaskMenu {
         bottom_bar.add_action(KeyCode::Esc, BottomBarAction::Exit);
 
         let title_input = Rc::new(RefCell::new(InputWidget::create_text_label()));
-        let description_input = Rc::new(RefCell::new(InputWidget::create_text_label()));
+        let description_input = Rc::new(RefCell::new(InputWidget::create_text_area()));
         let state_input = Rc::new(RefCell::new(MultipleOptionWidget::new(
             logic.borrow_mut().task_manager.get_states(),
             Direction::Horizontal,
