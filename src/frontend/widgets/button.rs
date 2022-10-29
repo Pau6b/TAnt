@@ -1,7 +1,10 @@
+use std::time::Duration;
+
 use crate::frontend::{
     core::ApplicationBackend,
     widgets::{FocusState, FocusableWidget, Widget},
 };
+use crossterm::event::KeyCode;
 use tui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
@@ -45,5 +48,13 @@ impl FocusableWidget for Button {
 
     fn get_focus_state(&self) -> FocusState {
         self.focus_state.clone()
+    }
+
+    fn process_input(&mut self, _key_code: KeyCode) {
+
+    }
+
+    fn update(&mut self, _duration: Duration) {
+
     }
 }

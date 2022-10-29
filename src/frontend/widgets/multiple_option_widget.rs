@@ -1,5 +1,8 @@
+use std::time::Duration;
+
+use crossterm::event::KeyCode;
 use tui::{
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Paragraph},
     Frame,
@@ -12,12 +15,12 @@ use super::{FocusState, FocusableWidget};
 pub struct MultipleOptionWidget {
     selected_option: Option<u32>,
     options: Vec<String>,
-    direction: tui::layout::Direction,
+    direction: Direction,
     focus_state: FocusState,
 }
 
 impl MultipleOptionWidget {
-    pub fn new(options: &Vec<String>, direction: tui::layout::Direction) -> MultipleOptionWidget {
+    pub fn new(options: &Vec<String>, direction: Direction) -> MultipleOptionWidget {
         let selected_option = if options.len() > 0 { Some(0) } else { None };
         MultipleOptionWidget {
             selected_option,
@@ -36,25 +39,32 @@ impl MultipleOptionWidget {
 }
 
 impl Widget for MultipleOptionWidget {
-    fn render(&self, frame: &mut Frame<ApplicationBackend>, area: tui::layout::Rect) {
-        let constraints: Vec<Constraint> = self
+    fn render(&self, frame: &mut Frame<ApplicationBackend>, area: Rect) {
+        let mut constraints: Vec<Constraint> = Vec::new();
+        self
             .options
             .iter()
-            .map(|option| Constraint::Length(option.len() as u16 + 2))
-            .collect();
+            .for_each(|option| {
+                constraints.push(Constraint::Length(option.len() as u16));
+                constraints.push(Constraint::Length(2));
+            });
         let chunks = Layout::default()
             .direction(self.direction.clone())
             .margin(1)
             .constraints(constraints)
             .split(area);
-        for i in 0..self.options.len() {
+        for i in 0..chunks.len() {
+            if (i % 2) == 1 {
+                continue;
+            }
+            let elem = i/2;
             let mut style = Style::default().fg(Color::White).bg(Color::Black);
             if let Some(selected_input) = self.selected_option.clone() {
-                if selected_input == i as u32 {
+                if selected_input == elem as u32 {
                     style = style.add_modifier(Modifier::UNDERLINED);
                 }
             }
-            let text = Paragraph::new(self.options[i].clone())
+            let text = Paragraph::new(self.options[elem].clone())
                 .block(Block::default())
                 .style(style);
             frame.render_widget(text, chunks[i])
@@ -70,4 +80,33 @@ impl FocusableWidget for MultipleOptionWidget {
     fn get_focus_state(&self) -> FocusState {
         self.focus_state
     }
+
+    fn process_input(&mut self, key_code: KeyCode) {
+        if self.options.len() == 0 {
+            return;
+        }
+        match key_code {
+            KeyCode::Left => {
+                if let Some(ref mut selected_option) = self.selected_option {
+                    if *selected_option > 0 {
+                        *selected_option -= 1;
+                    }
+                } else {
+                    self.selected_option = Some(0);
+                }
+            }
+            KeyCode::Right => {
+                if let Some(ref mut selected_option) = self.selected_option {
+                    if *selected_option < self.options.len() as u32 - 1 {
+                        *selected_option += 1;
+                    }
+                } else {
+                    self.selected_option = Some(0);
+                }
+            }
+            _ => (),
+        }
+    }
+
+    fn update(&mut self, _duration: Duration) {}
 }

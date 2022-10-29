@@ -47,45 +47,6 @@ impl InputWidget {
     pub fn get_current_text(&self) -> String {
         self.text.clone()
     }
-
-    pub fn process_input(&mut self, key_code: KeyCode) {
-        if self.focus_state == FocusState::NotFocused {
-            return ();
-        }
-        let mut modified_text = false;
-        match key_code {
-            KeyCode::Char(c) => {
-                self.text.push(c);
-                modified_text = true;
-            },
-            KeyCode::Backspace => {
-                self.text.pop();
-                modified_text = true;
-            }
-            KeyCode::Enter => {
-                if self.allow_new_lines {
-                    self.text.push('\n');
-                }
-            }
-            _ => (),
-        };
-        if modified_text {
-            if let Some(cursor_state) = &mut self.cursor_state {
-                cursor_state.tick_rate_milliseconds_left = cursor_state.tick_rate.as_millis() as i32;
-                cursor_state.is_cursor_showing = true;
-            }
-        }
-    }
-
-    pub fn update(&mut self, duration: Duration) {
-        if let Some(cursor_state) = &mut self.cursor_state {
-            cursor_state.tick_rate_milliseconds_left -= duration.as_millis() as i32;
-            if cursor_state.tick_rate_milliseconds_left <= 0 {
-                cursor_state.tick_rate_milliseconds_left += cursor_state.tick_rate.as_millis() as i32;
-                cursor_state.is_cursor_showing = !cursor_state.is_cursor_showing;
-            }
-        }
-    }
 }
 
 impl Widget for InputWidget {
@@ -122,5 +83,44 @@ impl FocusableWidget for InputWidget {
 
     fn get_focus_state(&self) -> FocusState {
         self.focus_state
+    }
+
+    fn process_input(&mut self, key_code: KeyCode) {
+        if self.focus_state == FocusState::NotFocused {
+            return ();
+        }
+        let mut modified_text = false;
+        match key_code {
+            KeyCode::Char(c) => {
+                self.text.push(c);
+                modified_text = true;
+            },
+            KeyCode::Backspace => {
+                self.text.pop();
+                modified_text = true;
+            }
+            KeyCode::Enter => {
+                if self.allow_new_lines {
+                    self.text.push('\n');
+                }
+            }
+            _ => (),
+        };
+        if modified_text {
+            if let Some(cursor_state) = &mut self.cursor_state {
+                cursor_state.tick_rate_milliseconds_left = cursor_state.tick_rate.as_millis() as i32;
+                cursor_state.is_cursor_showing = true;
+            }
+        }
+    }
+
+    fn update(&mut self, duration: Duration) {
+        if let Some(cursor_state) = &mut self.cursor_state {
+            cursor_state.tick_rate_milliseconds_left -= duration.as_millis() as i32;
+            if cursor_state.tick_rate_milliseconds_left <= 0 {
+                cursor_state.tick_rate_milliseconds_left += cursor_state.tick_rate.as_millis() as i32;
+                cursor_state.is_cursor_showing = !cursor_state.is_cursor_showing;
+            }
+        }
     }
 }

@@ -9,8 +9,6 @@ use crate::frontend::{
     },
 };
 use crossterm::event::{KeyCode, KeyEvent};
-use serde::__private::de;
-use std::clone;
 use std::{cell::{RefCell, Ref}, rc::Rc};
 use tui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -46,6 +44,7 @@ impl CreateTaskMenu {
             String::from("Accept"),
             Alignment::Center,
         )));
+
         let mut focusable_widgets: Vec<Rc<RefCell<dyn FocusableWidget>>> = Vec::new();
         focusable_widgets.reserve(4);
         let cloned_title = Rc::clone(&title_input);
@@ -125,22 +124,20 @@ impl Menu for CreateTaskMenu {
         match key.code {
             KeyCode::Esc => return Some(MenuEvent::Quit),
             KeyCode::Enter => {
-                if self.state_input.borrow_mut().get_focus_state() == FocusState::Focused {
-                    //if self
-                    //    .inputs
-                    //    .iter()
-                    //    .any(|input| input.get_current_text().len() == 0)
-                    //{
-                    //    return None;
-                    //}
-                    let new_task = Task {
-                        title: self.title_input.borrow_mut().get_current_text(),
-                        state: self.state_input.borrow_mut().get_selected_option().unwrap(),
-                        description: self.description_input.borrow_mut().get_current_text(),
-                    };
-                    let mut logic = self.logic.borrow_mut();
-                    logic.task_manager.add_task(new_task);
-                    return Some(MenuEvent::Quit);
+                if self.accept_button.borrow_mut().get_focus_state() == FocusState::Focused {
+                    let title = self.title_input.borrow_mut().get_current_text();
+                    let state = self.state_input.borrow_mut().get_selected_option();
+                    let description = self.description_input.borrow_mut().get_current_text();
+                    if title.len() > 0 && state != None && description.len() > 0 {
+                        let new_task = Task {
+                            title,
+                            state: state.unwrap(),
+                            description,
+                        };
+                        let mut logic = self.logic.borrow_mut();
+                        logic.task_manager.add_task(new_task);
+                        return Some(MenuEvent::Quit);
+                    }   
                 }
             }
             _ => (),
@@ -149,10 +146,7 @@ impl Menu for CreateTaskMenu {
     }
 
     fn update(&mut self, elapsed_time: std::time::Duration) {
-        //let selected_input = self.selected_input as usize;
-        //if selected_input < self.inputs.len() {
-        //    self.inputs[selected_input].update(elapsed_time);
-        //}
+        self.focus_controller.update(elapsed_time);
     }
 }
 
