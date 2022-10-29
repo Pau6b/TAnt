@@ -40,12 +40,20 @@ impl MultipleOptionWidget {
 
 impl Widget for MultipleOptionWidget {
     fn render(&self, frame: &mut Frame<ApplicationBackend>, area: Rect) {
+        if self.options.len() == 0 {
+            return;
+        }
         let mut constraints: Vec<Constraint> = Vec::new();
+        let selected_option = self.get_selected_option().unwrap();
         self
             .options
             .iter()
             .for_each(|option| {
-                constraints.push(Constraint::Length(option.len() as u16));
+                let mut length: u16 = option.len() as u16;
+                if selected_option.eq(option) && self.focus_state == FocusState::Focused {
+                    length += 1;
+                }
+                constraints.push(Constraint::Length(length));
                 constraints.push(Constraint::Length(2));
             });
         let chunks = Layout::default()
@@ -59,15 +67,16 @@ impl Widget for MultipleOptionWidget {
             }
             let elem = i/2;
             let mut style = Style::default().fg(Color::White).bg(Color::Black);
+            let mut text_str = self.options[elem].clone();
             if let Some(selected_input) = self.selected_option.clone() {
                 if selected_input == elem as u32 {
-                    if self.focus_state == FocusState::Focused {
-                        style = style.add_modifier(Modifier::ITALIC);
-                    }
                     style = style.add_modifier(Modifier::UNDERLINED);
+                    if self.focus_state == FocusState::Focused {
+                        text_str.insert(0, '>');
+                    }
                 }
             }
-            let text = Paragraph::new(self.options[elem].clone())
+            let text = Paragraph::new(text_str)
                 .block(Block::default())
                 .style(style);
             frame.render_widget(text, chunks[i])
