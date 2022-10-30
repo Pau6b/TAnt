@@ -41,7 +41,7 @@ impl Application {
         let terminal = Terminal::new(backend)?;
         let ui_context = Rc::new(RefCell::new(UIContext { terminal }));
 
-        let mut main_menu: Box<dyn Menu> = Box::new(MainMenu::new(Rc::clone(&self.logic)));
+        let mut main_menu: Box<dyn Menu<()>> = Box::new(MainMenu::new(Rc::clone(&self.logic)));
         execute_menu(&mut main_menu, Rc::clone(&ui_context))?;
 
         let mut bui_context = ui_context.borrow_mut();
@@ -58,10 +58,10 @@ impl Application {
     }
 }
 
-pub fn execute_menu(
-    menu: &mut Box<dyn Menu>,
+pub fn execute_menu<T>(
+    menu: &mut Box<dyn Menu<T>>,
     ui_context: Rc<RefCell<UIContext>>,
-) -> Result<(), io::Error> {
+) -> Result<T, io::Error> {
     let tick_rate = Duration::from_millis(33);
     let mut last_tick = Instant::now();
     menu.initialize(Rc::clone(&ui_context));
@@ -80,7 +80,7 @@ pub fn execute_menu(
                 let result = menu.on_key_pressed(key);
                 if let Some(r) = result {
                     match r {
-                        MenuEvent::Quit => break,
+                        MenuEvent::Quit(result) => return Ok(result),
                         MenuEvent::MenuExecutionResult(r) => {
                             r?
                         },
@@ -94,5 +94,4 @@ pub fn execute_menu(
             last_tick = Instant::now();
         }
     }
-    Ok(())
 }

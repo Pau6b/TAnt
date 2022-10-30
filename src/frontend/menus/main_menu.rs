@@ -2,6 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::app::{execute_menu, ApplicationBackend};
 use crate::backend::Task;
+use crate::backend::task::TaskId;
 use crate::frontend::widgets::BottomBar;
 use crate::frontend::widgets::bottom_bar::BottomBarAction;
 use crate::frontend::{
@@ -44,7 +45,7 @@ impl MainMenu {
     }
 }
 
-impl Menu for MainMenu {
+impl Menu<()> for MainMenu {
     fn initialize(&mut self, ui_context: Rc<RefCell<UIContext>>) {
         self.ui_context = Some(Rc::clone(&ui_context));
     }
@@ -69,26 +70,33 @@ impl Menu for MainMenu {
         frame.render_stateful_widget(tasks, chunks[0], &mut self.task_list.state);
     }
 
-    fn on_key_pressed(&mut self, key: KeyEvent) -> Option<MenuEvent> {
+    fn on_key_pressed(&mut self, key: KeyEvent) -> Option<MenuEvent<()>> {
         match key.code {
             KeyCode::Up => self.task_list.previous(),
             KeyCode::Down => self.task_list.next(),
             KeyCode::Char(c) => {
                 if 'n' == c {
-                    let mut new_menu: Box<dyn Menu> =
+                    let mut new_menu: Box<dyn Menu<Option<TaskId>>> =
                         Box::new(CreateTaskMenu::new(Rc::clone(&self.logic)));
-                    let execution_result = Some(MenuEvent::MenuExecutionResult(execute_menu(
+                    let menu_execution_result = execute_menu(
                         &mut new_menu,
                         Rc::clone(self.ui_context.as_ref().unwrap()),
-                    )));
-                    let logic = self.logic.borrow_mut();
-                    if self.task_list.items.len() != logic.task_manager.get_tasks().len() {
-                        //self.task_list.items.push();
+                    );
+                    match menu_execution_result {
+                        Ok(created_task_id_opt) => {
+                            if let Some(created_task_id) = created_task_id_opt {
+                                let logic = self.logic.borrow_mut();
+                                if let Some(task) = logic.task_manager.find_task(created_task_id) {
+                                    self.task_list.items.push((*task).clone());
+                                    return Some(MenuEvent::MenuExecutionResult(Ok(())));
+                                }
+                            }
+                        },
+                        Err(e) => return Some(MenuEvent::MenuExecutionResult(Err(e))),
                     }
-                    return execution_result;
                 }
             }
-            KeyCode::Esc => return Some(MenuEvent::Quit),
+            KeyCode::Esc => return Some(MenuEvent::Quit(())),
             _ => (),
         }
         None
