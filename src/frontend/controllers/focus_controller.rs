@@ -63,8 +63,4 @@ impl FocusController {
             }
         }
     }
-
-    pub fn get_focused_widget(&self) -> Rc<RefCell<dyn FocusableWidget>> {
-        Rc::clone(&self.focusable_widgets[self.selected_widget])
-    }
 }

@@ -1,5 +1,4 @@
 use crate::app::ApplicationBackend;
-use crate::backend::Task;
 use crate::frontend::{
     controllers::FocusController,
     core::{Logic, Menu, MenuEvent, UIContext},
@@ -116,11 +115,9 @@ impl Menu for CreateTaskMenu {
     }
 
     fn on_key_pressed(&mut self, key: KeyEvent) -> Option<MenuEvent> {
-        //let selected_input = self.selected_input as usize;
-        //        if selected_input < self.inputs.len() {
-        //            self.inputs[selected_input].process_input(key.code);
-        //        }
+
         self.focus_controller.process_input(key.code);
+
         match key.code {
             KeyCode::Esc => return Some(MenuEvent::Quit),
             KeyCode::Enter => {
@@ -129,13 +126,8 @@ impl Menu for CreateTaskMenu {
                     let state = self.state_input.borrow_mut().get_selected_option();
                     let description = self.description_input.borrow_mut().get_current_text();
                     if title.len() > 0 && state != None && description.len() > 0 {
-                        let new_task = Task {
-                            title,
-                            state: state.unwrap(),
-                            description,
-                        };
                         let mut logic = self.logic.borrow_mut();
-                        logic.task_manager.add_task(new_task);
+                        logic.task_manager.add_task(title, state.unwrap(), description);
                         return Some(MenuEvent::Quit);
                     }   
                 }

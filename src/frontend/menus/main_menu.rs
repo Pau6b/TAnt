@@ -29,7 +29,7 @@ impl MainMenu {
     pub fn new(logic: Rc<RefCell<Logic>>) -> MainMenu {
         let tasks = {
             let task_manager = &logic.borrow().task_manager;
-            task_manager.get_tasks().to_vec()
+            task_manager.get_tasks().iter().map(|task| (*task).clone()).collect()
         };
         let mut bottom_bar = BottomBar::new();
         bottom_bar.add_action(KeyCode::Char('n'), BottomBarAction::CreateTask);
@@ -83,7 +83,7 @@ impl Menu for MainMenu {
                     )));
                     let logic = self.logic.borrow_mut();
                     if self.task_list.items.len() != logic.task_manager.get_tasks().len() {
-                        self.task_list.items.push(logic.task_manager.get_tasks().last().unwrap().clone());
+                        //self.task_list.items.push();
                     }
                     return execution_result;
                 }
