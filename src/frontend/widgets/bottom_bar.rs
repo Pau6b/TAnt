@@ -24,7 +24,7 @@ pub struct BottomBar {
     actions: Vec<BottomBarActionConfig>,
 }
 
-impl BottomBar {
+impl BottomBar 
     pub fn new() -> BottomBar {
         BottomBar {
             actions: Vec::new(),
