@@ -1,12 +1,15 @@
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Write, collections::HashMap};
 
 use crate::backend::Task;
 
+use super::task::TaskId;
+
 #[derive(Serialize, Deserialize)]
 struct TasksState {
-    tasks: Vec<Task>,
+    tasks: HashMap<TaskId, Task>,
     valid_states: Vec<String>,
+    next_valid_id: u64,
 }
 
 pub struct TaskManager {
@@ -17,8 +20,9 @@ impl TaskManager {
     pub fn new() -> TaskManager {
         TaskManager {
             tasks_state: TasksState {
-                tasks: Vec::new(),
+                tasks: HashMap::new(),
                 valid_states: Vec::new(),
+                next_valid_id: 0,
             },
         }
     }
@@ -52,16 +56,33 @@ impl TaskManager {
         }
     }
 
-    pub fn add_task(&mut self, i_task: Task) {
-        if !self.is_task_valid(&i_task) {
-            return;
+    pub fn add_task(&mut self, title: String, state: String, description: String) -> Option<TaskId> {
+        let new_task = Task {
+            id: TaskId(self.tasks_state.next_valid_id),
+            title,
+            state,
+            description,
+            parent_task: None,
+            child_tasks: Vec::new(),
+        };
+
+        let task_id = new_task.id;
+        self.tasks_state.next_valid_id += 1;
+
+        if !self.is_task_valid(&new_task) {
+            return None;
         }
-        self.tasks_state.tasks.push(i_task);
+        self.tasks_state.tasks.insert(task_id, new_task);
         self.save();
+        Some(task_id)
     }
 
-    pub fn get_tasks(&self) -> &Vec<Task> {
-        &self.tasks_state.tasks
+    pub fn get_tasks(&self) -> Vec<&Task> {
+        self.tasks_state.tasks.iter().map(|kv| kv.1).collect()
+    }
+
+    pub fn find_task(&self, task_id: TaskId) -> Option<&Task> {
+        self.tasks_state.tasks.get(&task_id)
     }
 
     pub fn add_state(&mut self, state: String) {
@@ -74,6 +95,7 @@ impl TaskManager {
     pub fn get_states(&self) -> &Vec<String> {
         &self.tasks_state.valid_states
     }
+
 
     pub fn is_task_valid(&self, task: &Task) -> bool {
         self.tasks_state.valid_states.contains(&task.state)

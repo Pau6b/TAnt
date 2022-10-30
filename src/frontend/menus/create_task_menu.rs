@@ -1,5 +1,5 @@
 use crate::app::ApplicationBackend;
-use crate::backend::Task;
+use crate::backend::task::TaskId;
 use crate::frontend::{
     controllers::FocusController,
     core::{Logic, Menu, MenuEvent, UIContext},
@@ -70,7 +70,7 @@ impl CreateTaskMenu {
     }
 }
 
-impl Menu for CreateTaskMenu {
+impl Menu<Option<TaskId>> for CreateTaskMenu {
     fn initialize(&mut self, ui_context: Rc<RefCell<UIContext>>) {
         self.ui_context = Some(Rc::clone(&ui_context));
     }
@@ -115,28 +115,22 @@ impl Menu for CreateTaskMenu {
         self.accept_button.borrow().render(frame, chunks[3]);
     }
 
-    fn on_key_pressed(&mut self, key: KeyEvent) -> Option<MenuEvent> {
-        //let selected_input = self.selected_input as usize;
-        //        if selected_input < self.inputs.len() {
-        //            self.inputs[selected_input].process_input(key.code);
-        //        }
+    fn on_key_pressed(&mut self, key: KeyEvent) -> Option<MenuEvent<Option<TaskId>>> {
+
         self.focus_controller.process_input(key.code);
+
         match key.code {
-            KeyCode::Esc => return Some(MenuEvent::Quit),
+            KeyCode::Esc => return Some(MenuEvent::Quit(None)),
             KeyCode::Enter => {
                 if self.accept_button.borrow_mut().get_focus_state() == FocusState::Focused {
                     let title = self.title_input.borrow_mut().get_current_text();
                     let state = self.state_input.borrow_mut().get_selected_option();
                     let description = self.description_input.borrow_mut().get_current_text();
                     if title.len() > 0 && state != None && description.len() > 0 {
-                        let new_task = Task {
-                            title,
-                            state: state.unwrap(),
-                            description,
-                        };
                         let mut logic = self.logic.borrow_mut();
-                        logic.task_manager.add_task(new_task);
-                        return Some(MenuEvent::Quit);
+                        if let Some(created_task_id) = logic.task_manager.add_task(title, state.unwrap(), description) {
+                            return Some(MenuEvent::Quit(Some(created_task_id)));
+                        }
                     }   
                 }
             }
