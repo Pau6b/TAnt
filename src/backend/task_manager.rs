@@ -78,10 +78,38 @@ impl TaskManager {
         if !self.is_task_valid(&new_task) {
             return None;
         }
+        
         self.tasks_state.tasks.insert(task_id, new_task);
         self.save();
         Some(task_id)
     }
+
+    pub fn add_task_with_parent(&mut self, title: String, state: String, description: String, parent: &TaskId) -> Option<TaskId> {
+
+        if !self.tasks_state.tasks.contains_key(parent) {
+            return None;
+        }
+        
+        
+        if let Some(added_task) = self.add_task(title, state, description) {
+            {
+                let added_task_mut = self.tasks_state.tasks.get_mut(&added_task).unwrap();
+                added_task_mut.parent_task = Some(*parent);
+            }
+            {
+                let parent_task_opt = self.tasks_state.tasks.get_mut(&parent);
+                if let Some(parent_task) = parent_task_opt {
+                    parent_task.child_tasks.push(added_task);
+                    
+                }
+            }
+            return Some(added_task);
+        }
+        else {
+            return None;
+        }
+    }
+
 
     pub fn get_tasks(&self) -> Vec<&Task> {
         self.tasks_state.tasks.iter().map(|kv| kv.1).collect()
@@ -110,7 +138,6 @@ impl TaskManager {
 
 #[cfg(test)]
 mod tests {
-    use crate::backend::task;
 
     use super::*;
 
@@ -125,6 +152,20 @@ mod tests {
         let mut task_manager = create_task_manager();
         let task = task_manager.add_task(String::from("Title"), String::from("Open"), String::from("Description"));
         assert_eq!(task.is_some(), true);
+    }
+
+    #[test]
+    fn add_task_with_parent() {
+        let mut task_manager = create_task_manager();
+        let task1_id = task_manager.add_task(String::from("Title"), String::from("Open"), String::from("Description")).unwrap();
+        let task2_id = task_manager.add_task_with_parent(String::from("Title"), String::from("Open"), String::from("Description"), &task1_id).unwrap();
+
+        let task1 = task_manager.find_task(task1_id).unwrap();
+        let task2 = task_manager.find_task(task2_id).unwrap();
+        assert_eq!(task1.parent_task.is_none(), true);
+        assert_eq!(task1.child_tasks.len(), 1);
+        assert_eq!(task1.child_tasks.contains(&task2.id), true);
+        assert_eq!(task2.parent_task == Some(task1_id), true);
     }
 
     #[test]
