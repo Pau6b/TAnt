@@ -77,7 +77,7 @@ fn get_bottom_bar_action_description(action: BottomBarAction) -> String {
 
 fn key_to_string(key_code: KeyCode) -> String {
     if let KeyCode::Char(c) = key_code {
-        return c.to_string();
+        return c.to_string().to_uppercase();
     }
     match key_code {
         KeyCode::Esc => "Esc",

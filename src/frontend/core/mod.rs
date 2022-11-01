@@ -17,7 +17,7 @@ pub struct UIContext {
 
 impl Logic {
     pub fn new() -> Logic {
-        let mut task_manager = TaskManager::new();
+        let mut task_manager = TaskManager::new(Some(String::from("state.json")));
         task_manager.initialize();
         
         Logic {

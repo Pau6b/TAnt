@@ -75,7 +75,7 @@ impl Menu<()> for MainMenu {
             KeyCode::Up => self.task_list.previous(),
             KeyCode::Down => self.task_list.next(),
             KeyCode::Char(c) => {
-                if 'n' == c {
+                if 'n' == c.to_ascii_lowercase() {
                     let mut new_menu: Box<dyn Menu<Option<TaskId>>> =
                         Box::new(CreateTaskMenu::new(Rc::clone(&self.logic)));
                     let menu_execution_result = execute_menu(
