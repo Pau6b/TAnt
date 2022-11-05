@@ -6,20 +6,22 @@ pub struct StatefulList<T> {
 }
 
 impl<T> StatefulList<T> {
+    pub fn new() -> StatefulList<T> {
+        StatefulList {
+            state: ListState::default(),
+            items: Vec::new(),
+        }
+    }
 
     pub fn with_items(items: Vec<T>) -> StatefulList<T> {
         let mut state = ListState::default();
         state.select(Some(0));
 
-        StatefulList {
-            state,
-            items,
-        }
+        StatefulList { state, items }
     }
 
     pub fn next(&mut self) {
-        if self.items.len() == 0
-        {
+        if self.items.len() == 0 {
             return;
         }
         let i = match self.state.selected() {

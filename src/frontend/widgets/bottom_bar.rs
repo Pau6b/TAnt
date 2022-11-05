@@ -10,6 +10,7 @@ use tui::{
 #[derive(Copy, Clone)]
 pub enum BottomBarAction {
     CreateTask,
+    CreateTaskWithParent,
     Submit,
     Exit,
 }
@@ -71,6 +72,7 @@ fn get_bottom_bar_action_description(action: BottomBarAction) -> String {
         BottomBarAction::Exit => "Exit",
         BottomBarAction::Submit => "Submit",
         BottomBarAction::CreateTask => "Create task",
+        BottomBarAction::CreateTaskWithParent => "Create with parent",
     }
     .to_string()
 }

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::Write, collections::HashMap};
+use std::{fs::File, io::Write, collections::{BTreeMap}};
 
 use crate::backend::Task;
 
@@ -7,7 +7,7 @@ use super::task::TaskId;
 
 #[derive(Serialize, Deserialize)]
 struct TasksState {
-    tasks: HashMap<TaskId, Task>,
+    tasks: BTreeMap<TaskId, Task>,
     valid_states: Vec<String>,
     next_valid_id: u64,
 }
@@ -21,7 +21,7 @@ impl TaskManager {
     pub fn new(file_path_opt: Option<String>) -> TaskManager {
         TaskManager {
             tasks_state: TasksState {
-                tasks: HashMap::new(),
+                tasks: BTreeMap::new(),
                 valid_states: Vec::new(),
                 next_valid_id: 0,
             },
@@ -103,6 +103,7 @@ impl TaskManager {
                     
                 }
             }
+            self.save();
             return Some(added_task);
         }
         else {

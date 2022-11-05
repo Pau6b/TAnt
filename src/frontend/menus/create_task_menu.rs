@@ -26,10 +26,11 @@ pub struct CreateTaskMenu {
     accept_button: Rc<RefCell<Button>>,
     bottom_bar: BottomBar,
     focus_controller: FocusController,
+    parent_task: Option<TaskId>
 }
 
 impl CreateTaskMenu {
-    pub fn new(logic: Rc<RefCell<Logic>>) -> CreateTaskMenu {
+    pub fn new(logic: Rc<RefCell<Logic>>, parent_task: Option<TaskId>) -> CreateTaskMenu {
         let mut bottom_bar = BottomBar::new();
         bottom_bar.add_action(KeyCode::Enter, BottomBarAction::Submit);
         bottom_bar.add_action(KeyCode::Esc, BottomBarAction::Exit);
@@ -66,6 +67,7 @@ impl CreateTaskMenu {
             accept_button,
             bottom_bar,
             focus_controller,
+            parent_task,
         }
     }
 }
@@ -128,9 +130,14 @@ impl Menu<Option<TaskId>> for CreateTaskMenu {
                     let description = self.description_input.borrow_mut().get_current_text();
                     if title.len() > 0 && state != None && description.len() > 0 {
                         let mut logic = self.logic.borrow_mut();
-                        if let Some(created_task_id) = logic.task_manager.add_task(title, state.unwrap(), description) {
-                            return Some(MenuEvent::Quit(Some(created_task_id)));
+                        let mut _created_task : Option<TaskId> = None;
+                        if let Some(parent_task) = self.parent_task {
+                            _created_task = logic.task_manager.add_task_with_parent(title, state.unwrap(), description, &parent_task);
                         }
+                        else {
+                            _created_task = logic.task_manager.add_task(title, state.unwrap(), description);
+                        }
+                        return Some(MenuEvent::Quit(_created_task));
                     }   
                 }
             }
